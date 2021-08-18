@@ -1,0 +1,338 @@
+---
+title: "ECON 372 – Final Project"
+author: "Jessica Kang"
+date: "5/2/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(ggplot2)
+library(tidyverse)
+library(ggthemes)
+library(stringr)
+library(reshape2)
+```
+
+```{r}
+rush <- read.csv("~/Downloads/rush_standardcharge.csv", sep = ",")
+head(rush)
+joseph <- read.csv("~/Downloads/stjoseph_standardcharge.csv", sep = ",")
+head(joseph)
+nw <- read.csv("~/Downloads/northwestern_standardcharge.csv")
+head(nw)
+
+med <-read.csv("~/Downloads/medpayrates.csv")
+head(med)
+
+market <-read.csv("~/Downloads/hospitaldata.csv")
+head(market)
+
+# id <- c(140281,140224,140119)
+# medpay <- med %>%
+#   filter(PROVIDER_ID %in% id)
+# med$DRG <- gsub("([0-9]{3}).*", "\\1", med$DRG)
+# write.csv(med,"~/Downloads/medpayrates.csv", row.names = FALSE)
+
+# nw <- read.table("https://www.nm.org/-/media/northwestern/resources/patients-and-visitors/billing-and-insurance/37-0960170-northwestern-memorial-hospital-standard-charges.txt", header = TRUE, sep = "|", dec = ".")
+# write.csv(nw,"~/Downloads/northwestern_standardcharge.csv", row.names = FALSE)
+
+# northwestern <- nw %>%
+#   filter(str_detect(Billing.Code,"MS-DRG")) %>%
+#   filter(Avg_Negotiated_Rate > 0)
+#
+# northwestern$Billing.Code <- substr(northwestern$Billing.Code, 21, 24)
+# write.csv(northwestern,"~/Downloads/northwestern_standardcharge.csv", row.names = FALSE)
+
+# rushmc <- subset(rush, Gross.Charge!=" No Recent Data Available ")
+# rush$DRG <- gsub("MS([0-9]{3})", "\\1", rush$DRG)
+# write.csv(rush,"~/Downloads/rush_standardcharge.csv", row.names = FALSE)
+```
+
+```{r}
+# df <- left_join(df2, med, by=c("DRG" = "DRG", "PROVIDER_ID" = "PROVIDER_ID")) 
+# df
+# write.csv(df,"~/Downloads/hospitaldata.csv", row.names = FALSE)
+
+# rush2 <- left_join(rush, med, by=c("DRG" = "DRG", "PROVIDER_ID" = "PROVIDER_ID")) %>%
+#   na.omit()
+# 
+# joseph2 <- inner_join(med, joseph, by=c("DRG" = "DRG", "PROVIDER_ID" = "PROVIDER_ID")) %>%
+#   na.omit()
+# 
+# nw2 <- left_join(nw, med, by=c("DRG" = "DRG", "PROVIDER_ID" = "PROVIDER_ID")) %>%
+#   na.omit()
+
+# df1 <- rbind(rush2, joseph2)
+# df <- rbind(df1, nw2)
+# write.csv(df,"~/Downloads/hospitaldata.csv", row.names = FALSE)
+
+med2 <- med %>%
+  select(PROVIDER_ID, FACILITY_NAME, DRG, Gross_Charge, DISCHARGE_COUNT_SUM, MEAN_MEDICARE_PAYMENTS) %>%
+  filter(DRG %in% joseph$DRG, PROVIDER_ID == 140224)
+joseph2 <- left_join(med2, joseph, by=c("DRG" = "DRG", "PROVIDER_ID" = "PROVIDER_ID")) %>%
+  na.omit()
+write.csv(joseph2,"~/Downloads/stjoseph_standardcharge.csv", row.names = FALSE)
+
+med2 <- med %>%
+  select(PROVIDER_ID, FACILITY_NAME, DRG, DISCHARGE_COUNT_SUM, MEAN_MEDICARE_PAYMENTS) %>%
+  filter(DRG %in% rush$DRG, PROVIDER_ID == 140119)
+rush2 <- left_join(med2, rush, by=c("DRG" = "DRG", "PROVIDER_ID" = "PROVIDER_ID")) %>%
+  na.omit()
+write.csv(rush2,"~/Downloads/rush_standardcharge.csv", row.names = FALSE)
+
+med2 <- med %>%
+  select(PROVIDER_ID, FACILITY_NAME, DRG, DISCHARGE_COUNT_SUM, MEAN_MEDICARE_PAYMENTS) %>%
+  filter(DRG %in% nw$DRG, PROVIDER_ID == 140281)
+nw2 <- left_join(med2, nw, by=c("DRG" = "DRG", "PROVIDER_ID" = "PROVIDER_ID")) %>%
+  na.omit()
+write.csv(nw2,"~/Downloads/northwestern_standardcharge.csv", row.names = FALSE)
+
+df1 <- rbind(rush2, joseph2)
+df <- rbind(df1, nw2)
+write.csv(df,"~/Downloads/hospitaldata.csv", row.names = FALSE)
+```
+
+# 5. Provide a table of summary values for each hospital. For example, your table could show the mean charge and payments for these procedures by hospital.
+```{r}
+# # DRG codes with all 3 hospitals
+# set.seed(1)
+# 
+# DRGall <- market %>%
+#   group_by(DRG) %>%
+#   summarise(count = n()) %>%
+#   filter(count == 3) %>%
+#   sample_n(20)
+#   
+# # Individual Hospital Samples
+# market %>%
+#   filter(Provider_ID == 140119) %>%
+#   select(Provider_ID, DRG, Gross_Charge, Avg_Negotiated_Rate, Mean_Medicare_Payments, Gross_Charge) %>%
+#   filter(DRG %in% DRGall$DRG) %>%
+#   arrange(DRG)
+# 
+# rushsum <- market %>%
+#   filter(Provider_ID == 140119) %>%
+#   select(Provider_ID, DRG, Gross_Charge, Avg_Negotiated_Rate, Mean_Medicare_Payments, Gross_Charge)
+# summary(rushsum)
+# 
+# market %>%
+#   filter(Provider_ID == 140224) %>%
+#   select(Provider_ID, DRG, Gross_Charge, Avg_Negotiated_Rate, Mean_Medicare_Payments) %>%
+#   filter(DRG %in% DRGall$DRG) %>%
+#   arrange(DRG)
+# 
+# market %>%
+#   filter(Provider_ID == 140281) %>%
+#   select(Provider_ID, DRG, Gross_Charge, Avg_Negotiated_Rate, Mean_Medicare_Payments) %>%
+#   filter(DRG %in% DRGall$DRG) %>%
+#   arrange(DRG)
+
+# hospital observation counts
+market %>%
+  group_by(Provider_ID) %>%
+  summarise(count = n())
+
+# summary statistics
+market2 <- market %>%
+  select(Provider_ID, Gross_Charge, Avg_Negotiated_Rate, Mean_Medicare_Payments)
+by(market2, market$Provider_ID, summary)
+
+# mean across hospitals
+meansumm <- market %>%
+  group_by(Provider_ID, Hospital_Name) %>%
+  summarise(Mean_Gross_Charge = mean(Gross_Charge), Mean_Neg_Price = mean(Avg_Negotiated_Rate), Mean_Med_Payments = mean(Mean_Medicare_Payments))
+```
+
+
+# 6. Calculate the range of charges, negotiated prices, and Medicare payments across hospitals in your market. Show these ranges in a figure.
+```{r}
+# minmaxneg <- market %>%
+#   group_by(Provider_ID) %>%
+#   summarise(Min_Neg_Rate = min(Avg_Negotiated_Rate), Max_Neg_Rate = max(Avg_Negotiated_Rate)) 
+# 
+# minmaxmed <- market %>%
+#   group_by(Provider_ID) %>%
+#   summarise(Min_Med_Payments = min(Mean_Medicare_Payments), Max_Med_Payments =
+#             max(Mean_Medicare_Payments))
+# 
+# d <- melt(minmaxneg, id.vars = c('Provider_ID'), variable.name = 'Neg_Rate')
+# f <- melt(minmaxmed, id.vars = c('Provider_ID'), variable.name = 'Neg_Rate')
+# 
+# d$Provider_ID <- as.factor(d$Provider_ID)
+# f$Provider_ID <- as.factor(f$Provider_ID)
+# 
+# # Everything on the same plot
+# ggplot(d, aes(Provider_ID, value, col=Provider_ID)) + 
+#   geom_point()+
+#   geom_line()
+# ggplot(f, aes(Provider_ID, value, col=Provider_ID)) + 
+#   geom_point()+
+#   geom_line()
+# 
+#    # summarise(Min_Neg_Rate = min(Avg_Negotiated_Rate), Max_Neg_Rate = max(Avg_Negotiated_Rate), 
+#             # Min_Med_Payments = min(Mean_Medicare_Payments), Max_Med_Payments =
+#             # max(Mean_Medicare_Payments))
+# 
+# ggplot(minmax) + 
+#   stat_summary(
+#     mapping = aes(x = Provider_ID, y = depth),
+#     fun.ymin = min,
+#     fun.ymax = max,
+#     fun.y = median
+#   )
+
+# boxplot 
+minmax <- market %>%
+  group_by(Provider_ID) %>%
+  select(Provider_ID, Gross_Charge, Avg_Negotiated_Rate, Mean_Medicare_Payments)
+
+minmax$Provider_ID <- as.factor(minmax$Provider_ID)
+
+g <- melt(minmax, id.vars = c('Provider_ID'), variable.name = 'Type', value.name = "Payment")
+
+ggplot(g, aes(x = Provider_ID, y = Payment, color = Type)) +  # ggplot function
+  geom_boxplot() + ylim(0, 240000)
+```
+
+```{r}
+# Double-column bar plot
+ranges <- market %>%
+  group_by(Provider_ID, Hospital_Name) %>%
+  summarise(Min_Gross_Charge = min(Gross_Charge), Max_Gross_Charge = max(Gross_Charge), 
+            Min_Neg_Rate = min(Avg_Negotiated_Rate), Max_Neg_Rate = max(Avg_Negotiated_Rate), 
+            Min_Med_Payments = min(Mean_Medicare_Payments), Max_Med_Payments =
+            max(Mean_Medicare_Payments)) %>%
+  mutate(Range_Gross_Charge = Max_Gross_Charge - Min_Gross_Charge, 
+         Range_Neg_Rate = Max_Neg_Rate - Min_Neg_Rate, 
+         Range_Med_Payments = Max_Med_Payments -Min_Med_Payments) %>%
+  select(Provider_ID, Hospital_Name, Range_Gross_Charge, Range_Neg_Rate, Range_Med_Payments)
+
+d <- melt(ranges, id.vars = c('Provider_ID', 'Hospital_Name'), variable.name = 'Type', value.name = 'Range')
+
+# by payment range type
+ggplot(d, aes(x = Type , y = Range, fill = Hospital_Name)) +
+  geom_bar(position="dodge", stat = "identity")
+
+# by provider_id
+d$Provider_ID <- as.factor(d$Provider_ID)
+
+ggplot(d, aes(x = Provider_ID , y = Range, fill = Type)) +
+  geom_bar(stat = "identity",position = "dodge")
+
+```
+
+```{r}
+# Range across market
+# Barplot: x-axis (payment type - neg or med) // y axis (value of range)
+mrange <- market %>%
+  select(Gross_Charge, Avg_Negotiated_Rate, Mean_Medicare_Payments) %>%
+  summarise(Min_Gross_Charge = min(Gross_Charge), Max_Gross_Charge = max(Gross_Charge), 
+            Min_Neg_Rate = min(Avg_Negotiated_Rate), Max_Neg_Rate = max(Avg_Negotiated_Rate), 
+            Min_Med_Payments = min(Mean_Medicare_Payments), Max_Med_Payments =
+            max(Mean_Medicare_Payments)) %>%
+  mutate(Gross_Charge = Max_Gross_Charge - Min_Gross_Charge,
+         Neg_Rate = Max_Neg_Rate - Min_Neg_Rate, 
+         Med_Payments = Max_Med_Payments - Min_Med_Payments) %>%
+  select(Gross_Charge, Neg_Rate, Med_Payments) %>%
+  mutate(num = 1)
+
+h <- melt(mrange, id.vars = c('num'), variable.name = 'Type', value.name = 'Range')
+h$num <- c(1,2,3)
+h$Type <- as.factor(h$Type)
+
+ggplot(h, aes(x = Type, y = Range, fill= Type))+
+  geom_bar(stat="identity") + 
+  geom_text(aes(label=Range), vjust=1.6, color="white", size=3.5)+
+  theme(legend.position="none")
+```
+
+# 8. Calculate each hospital’s market share and provide a scatterplot of the market share and negotiated payments. 
+```{r}
+# select DRG codes that are present across all 3 hospitals
+DRGall <- market %>%
+  group_by(DRG) %>%
+  summarise(count = n()) %>%
+  filter(count == 3)
+
+# calculate total discharges for each DRG code, find market share of each hospital (hospital DRG discharge/total)
+mshare <- market %>%
+  filter(DRG %in% DRGall$DRG, Avg_Negotiated_Rate < 275000) %>%
+  select(Provider_ID, Hospital_Name, DRG, Avg_Negotiated_Rate, Total_Discharges) %>%
+  group_by(DRG) %>%
+  mutate(Total_Discharges_by_DRG = sum(Total_Discharges)) %>%
+  mutate(Market_Share_by_DRG = Total_Discharges/Total_Discharges_by_DRG)
+
+ggplot(mshare, aes(x = Market_Share_by_DRG, y = Avg_Negotiated_Rate, color = Hospital_Name, shape = Hospital_Name)) +
+  geom_point() 
+
+```
+
+```{r}
+hcahps <- read.csv("~/Downloads/HCAHPS-Hospital.csv", sep = ",")
+quality <- hcahps %>%
+  filter(Facility.ID %in% c(140224, 140119, 140281))
+write.csv(quality,"~/Downloads/HCAHPS-Hospital.csv", row.names = FALSE)
+
+# Patient Ratings
+qualm <- quality %>%
+  select(Facility.ID, Facility.Name, HCAHPS.Measure.ID, Patient.Survey.Star.Rating) %>%
+  filter(Patient.Survey.Star.Rating != 'Not Applicable')
+
+qualm$Patient.Survey.Star.Rating <- as.numeric(as.character(qualm$Patient.Survey.Star.Rating))
+
+ratings <- qualm %>%
+  group_by(Facility.ID, Facility.Name) %>%
+  summarise(Mean_Patient_Rating = mean(Patient.Survey.Star.Rating))
+
+
+# Linear Mean Value
+qualmeasure <- quality %>%
+  select(Facility.ID, Facility.Name, HCAHPS.Measure.ID, HCAHPS.Linear.Mean.Value) %>%
+  filter(HCAHPS.Linear.Mean.Value != 'Not Applicable')
+
+qualmeasure$HCAHPS.Linear.Mean.Value <- as.numeric(as.character(qualmeasure$HCAHPS.Linear.Mean.Value))
+
+lmv <- qualmeasure %>%
+  group_by(Facility.ID, Facility.Name) %>%
+  summarise(Mean_LMV = mean(HCAHPS.Linear.Mean.Value))
+
+# factor(meansumm$Provider_ID)
+# fac(qualitymeasures$Facility.ID)
+# 
+# qualitymeasures <- inner_join(ratings, lmv, by = c('Facility.ID', 'Facility.Name'))
+# meansumm$Provider_ID <- as.factor(meansumm$Provider_ID)
+# left_join(qualitymeasures, meansumm, by = c('Facility.ID'= 'Provider_ID', 'Facility.Name' = 'Hospital_Name'))
+``` 
+
+# 10. For each hospital in your data, try to determine whether their negotiated prices are more similar to “markup over Medicare” or “percentage of charges”.
+```{r}
+contracts <- market %>%
+  filter(DRG %in% DRGall$DRG, Avg_Negotiated_Rate < 275000) %>%
+  select(Provider_ID, Hospital_Name, DRG, Gross_Charge, Avg_Negotiated_Rate, Mean_Medicare_Payments) %>%
+  mutate(Percentage = Avg_Negotiated_Rate/Gross_Charge, Markup = Avg_Negotiated_Rate/Mean_Medicare_Payments)
+
+# graph distribution of percentages 
+ggplot(contracts, aes(x = DRG, y = Percentage, color = Hospital_Name)) +
+  geom_point()+
+  geom_smooth(method="lm", se=FALSE)
+
+ggplot(contracts, aes(x = Percentage, color = Hospital_Name)) +
+  geom_density()
+```
+
+```{r}
+ggplot(contracts, aes(x = DRG, y = Markup, color = Hospital_Name)) +
+  geom_point()+
+  geom_smooth(method="lm", se=FALSE)
+
+ggplot(contracts, aes(x = Markup, color = Hospital_Name)) +
+  geom_density()
+
+
+by(contracts$Percentage, contracts$Provider_ID, summary)
+```
+```{r}
+by(contracts$Markup, contracts$Provider_ID, summary)
+```
+
